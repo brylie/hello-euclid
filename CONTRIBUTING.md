@@ -1,4 +1,4 @@
-# Development Guide for Hello Euclid
+# Contributing to Hello Euclid
 
 This document describes the development setup, quality checks, and build workflow.
 
@@ -98,6 +98,15 @@ cargo build --lib --release
 
 Optimizations: `lto = "thin"`, `strip = true`
 
+### Plugin Output
+
+After building, the plugin artifacts are generated:
+
+- **Library:** `target/release/libhello_euclid.dylib` (macOS)
+- **Standalone binary:** `target/release/hello_euclid` (for testing core logic)
+
+nih-plug generates VST3/CLAP bundles for distribution (see nih-plug documentation for packaging).
+
 ## Testing
 
 ### Unit Tests
@@ -159,6 +168,34 @@ hello-euclid/
 
 ```
 
+## Git Workflow
+
+We use prek for pre-commit hooks. Hooks are automatically installed when you clone the repo.
+
+```bash
+# Install hooks
+prek install
+
+# Run hooks manually on all files
+prek run --all-files
+
+# Create a feature branch for your work
+git checkout -b feature/your-feature-name
+
+# Commit (hooks run automatically)
+git commit -m "Your commit message"
+
+# Push and create a PR for peer review
+git push -u origin feature/your-feature-name
+```
+
+### Pre-commit Hooks
+
+Configured in `.prek-config.yaml`:
+- **rustfmt** — Auto-format Rust code
+- **Clippy** — Lint with pedantic checks
+- **Generic checks** — Trailing whitespace, YAML/TOML validation, merge conflicts
+
 ## CI/CD
 
 Recommended CI checks (not yet configured):
@@ -194,6 +231,19 @@ rust-analyzer cache may be stale. Run:
 ```bash
 cargo clean
 cargo build --lib
+```
+
+### prek hook failures
+
+Ensure hooks are installed:
+```bash
+prek install
+```
+
+If formatting or clippy issues block commits, fix them locally:
+```bash
+cargo fmt
+./check.sh
 ```
 
 ## Next Steps
