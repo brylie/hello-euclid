@@ -1,3 +1,4 @@
 [tools]
+gh = "latest"
 prek = "latest"
 rust = "latest"
