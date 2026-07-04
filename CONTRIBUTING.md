@@ -17,6 +17,7 @@ cargo clippy --all-targets -- -D warnings -W clippy::pedantic
 ```
 
 **Lint Configuration:**
+
 - `.vscode/settings.json` — rust-analyzer integration with pedantic warnings
 - `src/lib.rs` — Crate-level lint attributes (`#![warn(...)]`)
 
@@ -55,6 +56,7 @@ cargo deny check
 ```
 
 Configuration: `deny.toml`
+
 - Allowed licenses: Apache-2.0, MIT, ISC, BSD-2/3-Clause
 - Detects: duplicate versions, multiple versions of the same crate, banned crates
 - Checks git sources for known security issues
@@ -76,6 +78,7 @@ Run all checks together:
 ```
 
 This script runs:
+
 1. Clippy with warnings as errors
 2. `cargo fmt --check`
 3. `cargo audit` (if installed)
@@ -105,7 +108,8 @@ After building, the plugin artifacts are generated:
 - **Library:** `target/release/libhello_euclid.dylib` (macOS)
 - **Standalone binary:** `target/release/hello_euclid` (for testing core logic)
 
-nih-plug generates VST3/CLAP bundles for distribution (see nih-plug documentation for packaging).
+nih-plug generates VST3/CLAP bundles for distribution (see
+[nih-plug documentation](https://github.com/robbert-vdh/nih-plug) for packaging).
 
 ## Testing
 
@@ -123,6 +127,7 @@ cargo test --lib -- --nocapture
 ```
 
 Euclidean algorithm tests verify:
+
 - Canonical patterns (E(3,8), E(5,8), E(2,5), E(7,16))
 - Rotation logic
 - Edge cases (empty, zero pulses, all pulses)
@@ -132,6 +137,7 @@ Euclidean algorithm tests verify:
 ### LLDB Debugging (Standalone)
 
 Launch configuration in `.vscode/launch.json`:
+
 ```bash
 Ctrl+F5 (or Debug > Start Debugging)
 ```
@@ -141,6 +147,7 @@ This builds and launches the standalone binary with LLDB attached.
 ### In-Editor Rust Analysis
 
 VS Code rust-analyzer provides:
+
 - Inline type hints
 - Hover documentation
 - Quick fixes from Clippy
@@ -148,7 +155,7 @@ VS Code rust-analyzer provides:
 
 ## Project Structure
 
-```
+```text
 hello-euclid/
 ├── src/
 │   ├── lib.rs          # Plugin trait impl, param definitions
@@ -170,7 +177,8 @@ hello-euclid/
 
 ## Git Workflow
 
-We use prek for pre-commit hooks. Hooks are automatically installed when you clone the repo.
+We use prek for pre-commit hooks. Hooks are automatically installed when
+you clone the repo.
 
 ```bash
 # Install hooks
@@ -192,6 +200,7 @@ git push -u origin feature/your-feature-name
 ### Pre-commit Hooks
 
 Configured in `.prek-config.yaml`:
+
 - **rustfmt** — Auto-format Rust code
 - **Clippy** — Lint with pedantic checks
 - **Generic checks** — Trailing whitespace, YAML/TOML validation, merge conflicts
@@ -214,6 +223,7 @@ Recommended CI checks (not yet configured):
 ### "Error: no such command: `audit`/`deny`"
 
 These are optional tools. Install with:
+
 ```bash
 cargo install cargo-audit
 cargo install cargo-deny
@@ -223,11 +233,13 @@ Or remove them from `check.sh` if not needed.
 
 ### "warning: code that will be rejected by a future version of Rust"
 
-This is typically from transitive dependencies (like `block` crate). Monitor for updates but not critical for now.
+This is typically from transitive dependencies (like `block` crate).
+Monitor for updates but not critical for now.
 
 ### Clippy errors in VS Code after code changes
 
 rust-analyzer cache may be stale. Run:
+
 ```bash
 cargo clean
 cargo build --lib
@@ -236,11 +248,13 @@ cargo build --lib
 ### prek hook failures
 
 Ensure hooks are installed:
+
 ```bash
 prek install
 ```
 
 If formatting or clippy issues block commits, fix them locally:
+
 ```bash
 cargo fmt
 ./check.sh
