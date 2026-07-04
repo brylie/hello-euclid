@@ -2,6 +2,31 @@
 
 This document describes the development setup, quality checks, and build workflow.
 
+- [Contributing to Hello Euclid](#contributing-to-hello-euclid)
+  - [Code Quality](#code-quality)
+    - [Linting with Clippy](#linting-with-clippy)
+    - [Formatting](#formatting)
+    - [Security \& Dependency Management](#security--dependency-management)
+      - [cargo-audit (Security Vulnerabilities)](#cargo-audit-security-vulnerabilities)
+      - [cargo-deny (Licenses, Duplicates, Banned Crates)](#cargo-deny-licenses-duplicates-banned-crates)
+      - [cargo-machete (Unused Dependencies)](#cargo-machete-unused-dependencies)
+    - [Complete Quality Check](#complete-quality-check)
+  - [Building](#building)
+    - [Debug Build](#debug-build)
+    - [Release Build](#release-build)
+  - [Testing](#testing)
+    - [Unit Tests](#unit-tests)
+  - [Debugging](#debugging)
+    - [LLDB Debugging (Standalone)](#lldb-debugging-standalone)
+    - [In-Editor Rust Analysis](#in-editor-rust-analysis)
+  - [Project Structure](#project-structure)
+  - [CI/CD](#cicd)
+  - [Common Issues](#common-issues)
+    - ["Error: no such command: `audit`/`deny`"](#error-no-such-command-auditdeny)
+    - ["warning: code that will be rejected by a future version of Rust"](#warning-code-that-will-be-rejected-by-a-future-version-of-rust)
+    - [Clippy errors in VS Code after code changes](#clippy-errors-in-vs-code-after-code-changes)
+  - [Next Steps](#next-steps)
+
 ## Code Quality
 
 ### Linting with Clippy
