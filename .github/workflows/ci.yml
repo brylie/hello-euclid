@@ -1,0 +1,229 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint (prek)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      prek_outcome: ${{ steps.prek.outcome }}
+      prek_output: ${{ steps.prek-summary.outputs.output }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075fab17578c3545ca529
+        # v2.7.3
+
+      - name: Install mise tools for linting
+        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        with:
+          install_args: "actionlint markdownlint-cli"
+
+      - name: Cache prek hook environments
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/prek
+          key: prek-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      # Inline annotations on the "Files changed" tab for any clippy finding
+      - name: Annotate Clippy findings
+        if: always()
+        continue-on-error: true
+        run: |
+          cargo clippy --all-targets --message-format=json 2>&1 | \
+            jq -r 'select(.message.rendered != null) |
+              "\(.spans[0].file_name):\(.spans[0].line_start):\(.spans[0].column_start): \(.message.level): \(.message.message)"' | \
+            while IFS=: read -r file line col level msg; do
+              if [ -n "$file" ]; then
+                echo "::${level} file=$file,line=$line,col=$col::$msg"
+              fi
+            done
+
+      # Runs prek: yaml/json/toml checks, rustfmt, clippy, deny, markdownlint
+      - name: Run pre-commit checks (prek)
+        id: prek
+        run: |
+          set -o pipefail
+          prek run --all-files 2>&1 | tee /tmp/prek-output.txt
+
+      - name: Capture prek output for summary
+        id: prek-summary
+        if: always()
+        run: |
+          delimiter="EOF_$(openssl rand -hex 16)"
+          {
+            echo "output<<$delimiter"
+            tail -c 6000 /tmp/prek-output.txt
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      test_outcome: ${{ steps.test.outcome }}
+      test_output: ${{ steps.test-summary.outputs.output }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075fab17578c3545ca529
+        # v2.7.3
+
+      # continue-on-error so the job reports its output even when tests fail
+      - name: Test with cargo
+        id: test
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          cargo test --all 2>&1 | tee /tmp/test-output.txt
+
+      - name: Capture test output for summary
+        id: test-summary
+        if: always()
+        run: |
+          delimiter="EOF_$(openssl rand -hex 16)"
+          {
+            echo "output<<$delimiter"
+            tail -c 6000 /tmp/test-output.txt
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
+
+  # Aggregates the parallel jobs above
+  report:
+    name: Report results
+    needs: [lint, test]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # Aggregated pass/fail dashboard on the workflow run's Summary tab
+      - name: Write job summary
+        env:
+          PREK_OUTPUT: ${{ needs.lint.outputs.prek_output }}
+          TEST_OUTPUT: ${{ needs.test.outputs.test_output }}
+        run: |
+          {
+            echo "## CI Results"
+            echo
+            echo "| Check | Result |"
+            echo "|-------|--------|"
+            echo "| prek (lint, format, yaml/json/toml, etc.) | ${{ needs.lint.outputs.prek_outcome == 'success' && '✅ Passed' || '❌ Failed' }} |"
+            echo "| cargo test | ${{ needs.test.outputs.test_outcome == 'success' && '✅ Passed' || '❌ Failed' }} |"
+            echo
+
+            contributing_url="https://github.com/${{ github.repository }}/blob/main/CONTRIBUTING.md"
+
+            if [ "${{ needs.lint.outputs.prek_outcome }}" != "success" ]; then
+              echo "<details><summary>prek output</summary>"
+              echo
+              echo '```'
+              echo "$PREK_OUTPUT"
+              echo '```'
+              echo "Run \`prek run --all-files\` locally to reproduce and fix. See [Pre-commit Hooks (prek)]($contributing_url#pre-commit-hooks-prek) in CONTRIBUTING.md."
+              echo "</details>"
+            fi
+            if [ "${{ needs.test.outputs.test_outcome }}" != "success" ]; then
+              echo "<details><summary>cargo test output (tail)</summary>"
+              echo
+              echo '```'
+              echo "$TEST_OUTPUT"
+              echo '```'
+              echo "Run \`cargo test --all\` locally to reproduce and fix. See [Running Tests]($contributing_url#running-tests) in CONTRIBUTING.md."
+              echo "</details>"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Builds a sticky PR comment and writes it to an artifact
+      # (comment-on-pr.yml posts it on workflow_run for fork-PR compatibility)
+      - name: Build PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          PREK_OUTPUT: ${{ needs.lint.outputs.prek_output }}
+          TEST_OUTPUT: ${{ needs.test.outputs.test_output }}
+        with:
+          script: |
+            const marker = '<!-- hello-euclid-ci-report -->';
+            const contributingUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/CONTRIBUTING.md`;
+            const author = context.payload.pull_request.user.login;
+
+            const failures = [
+              { outcome: '${{ needs.lint.outputs.prek_outcome }}', name: 'prek', label: 'Lint (prek)', output: process.env.PREK_OUTPUT, fix: 'prek run --all-files', docs: `${contributingUrl}#pre-commit-hooks-prek`, docsLabel: 'Pre-commit Hooks (prek)' },
+              { outcome: '${{ needs.test.outputs.test_outcome }}', name: 'cargo test', label: 'Tests (cargo)', output: process.env.TEST_OUTPUT, fix: 'cargo test --all', docs: `${contributingUrl}#running-tests`, docsLabel: 'Running Tests' },
+            ].filter((check) => check.outcome !== 'success');
+
+            const failedLabels = failures.map((check) => check.label);
+
+            const greeting = failedLabels.length
+              ? [
+                  `👋 Hi @${author}, thanks for the pull request! Before this can be merged, please address: **${failedLabels.join(', ')}**.`,
+                  '',
+                  'Details and local reproduction commands are below, with links to the relevant CONTRIBUTING.md section for each.',
+                  '',
+                ]
+              : [];
+
+            const failuresSection = failures.length
+              ? [
+                  '## CI Failures',
+                  '',
+                  ...failures.flatMap((check) => [
+                    `<details><summary>❌ ${check.name}</summary>`,
+                    '',
+                    '```',
+                    check.output || '(no output captured)',
+                    '```',
+                    '',
+                    `Run \`${check.fix}\` locally to reproduce and fix. See [${check.docsLabel}](${check.docs}) in CONTRIBUTING.md.`,
+                    '</details>',
+                    '',
+                  ]),
+                ]
+              : [];
+
+            const body = [
+              marker,
+              ...greeting,
+              ...failuresSection,
+              failures.length === 0 ? '✅ All checks passed!' : '',
+            ].join('\n');
+
+            require('fs').writeFileSync(
+              'pr-comment.json',
+              JSON.stringify({ pr_number: context.issue.number, marker, body }),
+            );
+
+      - name: Upload PR comment artifact
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pr-comment
+          path: pr-comment.json
+          retention-days: 1
+
+      - name: Fail if any check failed
+        run: |
+          if [ "${{ needs.lint.outputs.prek_outcome }}" != "success" ] || \
+             [ "${{ needs.test.outputs.test_outcome }}" != "success" ]; then
+            echo "One or more checks failed. See the job summary above and the failing job's log for details."
+            exit 1
+          fi

@@ -1,4 +1,4 @@
-# Development Guide for Hello Euclid
+# Contributing to Hello Euclid
 
 This document describes the development setup, quality checks, and build workflow.
 
@@ -6,7 +6,8 @@ This document describes the development setup, quality checks, and build workflo
 
 ### Linting with Clippy
 
-We use Clippy with strict pedantic checks enabled to catch common mistakes and idioms.
+We use Clippy with strict pedantic checks enabled to catch common mistakes and
+idioms.
 
 ```bash
 # Check all targets (lib, tests, benches, examples)
@@ -58,7 +59,8 @@ cargo deny check
 Configuration: `deny.toml`
 
 - Allowed licenses: Apache-2.0, MIT, ISC, BSD-2/3-Clause
-- Detects: duplicate versions, multiple versions of the same crate, banned crates
+- Detects: duplicate versions, multiple versions of the same crate, banned
+  crates
 - Checks git sources for known security issues
 
 #### cargo-machete (Unused Dependencies)
@@ -167,16 +169,15 @@ hello-euclid/
 
 ## CI/CD
 
-Recommended CI checks (not yet configured):
+GitHub Actions workflows run automatically on push and pull requests to `main`:
 
-```yaml
-# Example GitHub Actions
-- cargo fmt --check
-- cargo clippy --all-targets -- -D warnings -W clippy::pedantic
-- cargo test --lib
-- cargo audit
-- cargo deny check
-```
+- **lint**: Runs prek hooks (rustfmt, clippy, deny, markdownlint, yaml/json/toml
+  checks)
+- **test**: Runs `cargo test --all`
+- **report**: Aggregates results with dashboard and PR comments
+
+Failures are annotated directly on PR "Files changed" tab with file/line/column
+references.
 
 ## Common Issues
 
@@ -193,7 +194,8 @@ Or remove them from `check.sh` if not needed.
 
 ### "warning: code that will be rejected by a future version of Rust"
 
-This is typically from transitive dependencies (like `block` crate). Monitor for updates but not critical for now.
+This is typically from transitive dependencies (like `block` crate). Monitor for
+updates but not critical for now.
 
 ### Clippy errors in VS Code after code changes
 
