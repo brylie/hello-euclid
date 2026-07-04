@@ -1,17 +1,24 @@
 {
-  "rust-analyzer.cargo.features": "all",
-  "rust-analyzer.check.command": "clippy",
-  "rust-analyzer.check.extraArgs": [
-    "--all-targets",
-    "--",
-    "-D",
-    "warnings",
-    "-W",
-    "clippy::pedantic"
-  ],
-  "rust-analyzer.lens.enable": true,
-  "[rust]": {
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "rust-lang.rust-analyzer"
-  }
+    "rust-analyzer.cargo.features": "all",
+    "rust-analyzer.check.command": "clippy",
+    "rust-analyzer.check.extraArgs": [
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings",
+        "-W",
+        "clippy::pedantic"
+    ],
+    "rust-analyzer.lens.enable": true,
+    "[rust]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "rust-lang.rust-analyzer"
+    },
+    "[markdown]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+    },
+    "markdownlint.config": {
+        "extends": ".markdownlintrc.json"
+    }
 }
