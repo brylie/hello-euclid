@@ -13,5 +13,12 @@
     "[rust]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "rust-lang.rust-analyzer"
+    },
+    "[markdown]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+    },
+    "markdownlint.config": {
+        "extends": ".markdownlintrc.json"
     }
 }

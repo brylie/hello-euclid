@@ -17,6 +17,7 @@ cargo clippy --all-targets -- -D warnings -W clippy::pedantic
 ```
 
 **Lint Configuration:**
+
 - `.vscode/settings.json` — rust-analyzer integration with pedantic warnings
 - `src/lib.rs` — Crate-level lint attributes (`#![warn(...)]`)
 
@@ -55,6 +56,7 @@ cargo deny check
 ```
 
 Configuration: `deny.toml`
+
 - Allowed licenses: Apache-2.0, MIT, ISC, BSD-2/3-Clause
 - Detects: duplicate versions, multiple versions of the same crate, banned crates
 - Checks git sources for known security issues
@@ -76,6 +78,7 @@ Run all checks together:
 ```
 
 This script runs:
+
 1. Clippy with warnings as errors
 2. `cargo fmt --check`
 3. `cargo audit` (if installed)
@@ -114,6 +117,7 @@ cargo test --lib -- --nocapture
 ```
 
 Euclidean algorithm tests verify:
+
 - Canonical patterns (E(3,8), E(5,8), E(2,5), E(7,16))
 - Rotation logic
 - Edge cases (empty, zero pulses, all pulses)
@@ -123,6 +127,7 @@ Euclidean algorithm tests verify:
 ### LLDB Debugging (Standalone)
 
 Launch configuration in `.vscode/launch.json`:
+
 ```bash
 Ctrl+F5 (or Debug > Start Debugging)
 ```
@@ -132,6 +137,7 @@ This builds and launches the standalone binary with LLDB attached.
 ### In-Editor Rust Analysis
 
 VS Code rust-analyzer provides:
+
 - Inline type hints
 - Hover documentation
 - Quick fixes from Clippy
@@ -139,7 +145,7 @@ VS Code rust-analyzer provides:
 
 ## Project Structure
 
-```
+```text
 hello-euclid/
 ├── src/
 │   ├── lib.rs          # Plugin trait impl, param definitions
@@ -177,6 +183,7 @@ Recommended CI checks (not yet configured):
 ### "Error: no such command: `audit`/`deny`"
 
 These are optional tools. Install with:
+
 ```bash
 cargo install cargo-audit
 cargo install cargo-deny
@@ -191,6 +198,7 @@ This is typically from transitive dependencies (like `block` crate). Monitor for
 ### Clippy errors in VS Code after code changes
 
 rust-analyzer cache may be stale. Run:
+
 ```bash
 cargo clean
 cargo build --lib
