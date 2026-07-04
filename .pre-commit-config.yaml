@@ -23,6 +23,15 @@ repos:
         pass_filenames: false
         stages: [commit]
 
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        name: Lint Markdown
+        description: Check Markdown syntax and style
+        types: [markdown]
+
   # General pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
