@@ -1,0 +1,43 @@
+# Pre-commit hook configuration
+# See https://pre-commit.com for documentation
+
+repos:
+  # Local Rust checks
+  - repo: local
+    hooks:
+      - id: rustfmt
+        name: rustfmt
+        description: Format Rust code
+        entry: cargo fmt
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [commit]
+
+      - id: clippy
+        name: clippy
+        description: Lint Rust code with Clippy (pedantic)
+        entry: cargo clippy --all-targets
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [commit]
+
+  # General pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+      - id: end-of-file-fixer
+        name: Fix end of file
+      - id: check-yaml
+        name: Check YAML syntax
+      - id: check-toml
+        name: Check TOML syntax
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+
+# Configuration
+exclude: "^(target/|.git/)"
+fail_fast: false

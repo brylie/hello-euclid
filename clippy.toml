@@ -1,0 +1,5 @@
+# Clippy configuration for hello-euclid
+# See: https://rust-lang.github.io/rust-clippy/
+
+# Threshold for detecting large error types (used in some lints)
+large-error-threshold = 200
